@@ -14,6 +14,8 @@
                       <sui-button
                         icon="table"
                         color="violet"
+                        :loading="loading"
+                        :disabled="loading"
                         @click="createNew"
                         icon-position="left"
                         content="Create New Retro" />
@@ -42,9 +44,18 @@
 <script>
 export default {
   name: 'App',
+  data() {
+    return {
+      loading: false,
+    };
+  },
   methods: {
     createNew() {
-      this.$router.push('/board');
+      this.loading = true;
+      setTimeout(() => {
+        this.loading = false;
+      }, 2000);
+      // this.$router.push('/board');
     },
   },
 };
