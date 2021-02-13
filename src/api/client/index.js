@@ -106,6 +106,16 @@ const client = {
       utils.log(error);
     }
   },
+  // eslint-disable-next-line consistent-return
+  async saveTitle(retroId, title) {
+    try {
+      await retros.doc(retroId).update({
+        title,
+      });
+    } catch (error) {
+      utils.log(error);
+    }
+  },
 };
 
 export default client;

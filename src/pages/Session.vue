@@ -10,9 +10,10 @@
               size="large" />
           </sui-menu-item>
           <sui-menu-item>
-            <sui-input 
+            <sui-input
               transparent
               v-model="title"
+              @mouseleave="saveTitle"
               placeholder="Retrospective Title" />
           </sui-menu-item>
 
@@ -52,7 +53,7 @@
 </template>
 
 <script>
-import client, { retros } from '../api/client';
+import client from '../api/client';
 import WorkArea from '../components/WorkArea.vue';
 import Avatars from '../components/Avatars.vue';
 
@@ -88,7 +89,7 @@ export default {
   },
   data() {
     return {
-      title: '',
+      title: this.retro && this.retro.title ? this.retro.title : '',
       loading: true,
       retro: null,
       session: null,
@@ -101,6 +102,12 @@ export default {
     },
   },
   methods: {
+    async saveTitle() {
+      console.log('===> ', this.retro.title, this.title, this.retro.id);
+      if (this.retro && this.retro.title !== this.title) {
+        await client.saveTitle(this.retro.id, this.title);
+      }
+    },
     async getRoom() {
       const retroId = this.$route.params.id;
       const retro = await client.getRetro(retroId);
@@ -146,17 +153,20 @@ export default {
         this.loading = false;
       });
   },
-  mounted() {
-    if (this.retro && this.retro.id) {
-      retros.doc(this.retro.id)
-        .onSnapshot((doc) => {
-          this.retro = {
-            id: doc.id,
-            ...doc.data(),
-          };
-        });
-    }
-  },
+  // mounted() {
+  //   if (this.retro && this.retro.id) {
+  //     retros.doc(this.retro.id)
+  //       .onSnapshot((doc) => {
+  //         const otherFields = doc.data();
+  //         this.title = otherFields.title;
+  //         console.log('===> other fields', otherFields.title);
+  //         this.retro = {
+  //           id: doc.id,
+  //           ...otherFields,
+  //         };
+  //       });
+  //   }
+  // },
   beforeRouteLeave(to, from, next) {
     this.endSession().then(() => {
       window.removeEventListener('beforeunload', this.endSession);
