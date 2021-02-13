@@ -35,7 +35,8 @@
 
 <script>
 import Note from './Note.vue';
-import { retros } from '../api/client';
+import bus from '../utils/bus';
+import client, { retros } from '../api/client';
 
 export default {
   components: { Note },
@@ -59,9 +60,19 @@ export default {
     filterNotesByType(type) {
       return this.notes ? this.notes.filter((note) => note.type === type) : [];
     },
+
+    async saveNote(note) {
+      const copyOfNotes = [...this.notes];
+      const noteIndex = copyOfNotes.findIndex((n) => n.id === note.id);
+      copyOfNotes[noteIndex] = note;
+      await client.saveNotes(this.retroId, copyOfNotes);
+    },
   },
   created() {
     this.getRetro();
+  },
+  beforeMount() {
+    bus.$on('save-note', this.saveNote);
   },
   watch: {
     retroId() {
