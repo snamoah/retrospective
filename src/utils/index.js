@@ -10,4 +10,7 @@ export default {
     const offset = process.env.VUE_APP_BASE_URL.length + 10;
     return link.slice(offset);
   },
+  log(...args) {
+    console.log('[CUSTOM]: ', ...args);
+  },
 };

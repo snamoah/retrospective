@@ -13,4 +13,6 @@ const config = {
 const app = firebase.initializeApp(config);
 const db = app.firestore();
 
+export const fieldValue = firebase.firestore.FieldValue;
+
 export default db;

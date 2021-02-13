@@ -9,7 +9,11 @@ const routes = [
     path: '/retros/:id',
     component: Session,
   },
-  { path: '*', component: NotFound },
+  {
+    name: 'notFound',
+    path: '*',
+    component: NotFound,
+  },
 ];
 
 export default routes;

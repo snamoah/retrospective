@@ -1,28 +1,154 @@
 <template>
-  <div class="background">
-    <div class="header">
-      <sui-menu text>
-        <sui-menu-item header>
-          <sui-icon
-            name="table"
-            color="violet"
-            size="large" />
-        </sui-menu-item>
-        <sui-menu-item>
-          <sui-input transparent placeholder="Retrospective Title" />
-        </sui-menu-item>
-      </sui-menu>
+  <transition name="fade">
+    <div v-show="!loading" class="background">
+      <div class="header">
+        <sui-menu text>
+          <sui-menu-item header>
+            <sui-icon
+              name="table"
+              color="violet"
+              size="large" />
+          </sui-menu-item>
+          <sui-menu-item>
+            <sui-input transparent placeholder="Retrospective Title" />
+          </sui-menu-item>
+
+          <sui-menu-item position="middle">
+            <div>
+              <sui-button
+                color="teal"
+                icon="smile outline"
+                label-position="left"
+                content="Positive Note" />
+              <sui-button
+                color="orange"
+                icon="frown outline"
+                label-position="left"
+                content="Negative Note" />
+              <sui-button
+                color="violet"
+                icon="meh outline"
+                label-position="left"
+                content="Improvement Note" />
+              </div>
+          </sui-menu-item>
+
+          <sui-menu-menu position="right">
+            <sui-menu-item v-if="avatarLinks.length > 0">
+              <sui-image
+                circular
+                size="mini"
+                v-for="(link, index) in avatarLinks"
+                :key="index"
+                :src="link" />
+              <div
+                v-if="restCount > 0"
+                class="avatar-additional">
+                <span>+ {{ restCount }}</span>
+              </div>
+            </sui-menu-item>
+          </sui-menu-menu>
+        </sui-menu>
+      </div>
+      <sui-grid
+        :columns="3">
+        <sui-grid-row>
+          <sui-grid-column>
+            <div class="workarea">
+              <note />
+            </div>
+          </sui-grid-column>
+          <sui-grid-column>
+            <div class="workarea">
+              <note />
+            </div>
+          </sui-grid-column>
+          <sui-grid-column>
+            <div class="workarea">
+              <note />
+            </div>
+          </sui-grid-column>
+        </sui-grid-row>
+      </sui-grid>
     </div>
-    <sui-grid>
-      <sui-grid-row>
-      </sui-grid-row>
-    </sui-grid>
-  </div>
+  </transition>
 </template>
 
 <script>
-export default {
+import client from '../api/client';
+import Note from '../components/Note.vue';
 
+const MAX_SHOW = 2;
+
+export default {
+  components: {
+    Note,
+  },
+  data() {
+    return {
+      loading: true,
+      retro: null,
+      session: null,
+
+    };
+  },
+  computed: {
+    avatarLinks() {
+      const numberOfAvatars = (this.usersCount > MAX_SHOW)
+        ? MAX_SHOW
+        : this.usersCount;
+      return Array.from({ length: numberOfAvatars })
+        .map((id) => `https://www.gravatar.com/avatar/${id}?d=retro&s=40`);
+    },
+    usersCount() {
+      return this.retro && this.retro.users ? this.retro.users.length : 0;
+    },
+    restCount() {
+      return this.retro && this.retro.users && this.retro.users.length > MAX_SHOW
+        ? this.retro.users.length - MAX_SHOW
+        : 0;
+    },
+  },
+  methods: {
+    async getRoom() {
+      const retroId = this.$route.params.id;
+      const retro = await client.getRetro(retroId);
+
+      if (!retro) {
+        this.$router.push({ name: 'notFound' });
+        return;
+      }
+
+      this.retro = retro;
+    },
+    async startSession() {
+      console.log('===> we get here');
+      const session = await client.createSession(this.retro.id);
+      this.session = session.id;
+    },
+
+    async endSession() {
+      if (this.session && this.retro) {
+        console.log('===> this is called');
+        await client.closeSession(this.session, this.retro.id);
+      }
+    },
+  },
+  created() {
+    window.addEventListener('beforeunload', this.endSession);
+    this.getRoom()
+      .then(() => {
+        if (this.retro) {
+          return this.startSession();
+        }
+        return Promise.resolve();
+      }).then(() => {
+        this.loading = false;
+      });
+  },
+  beforeRouteLeave(to, from, next) {
+    this.endSession().then(next);
+  },
 };
 </script>
 
@@ -34,5 +160,33 @@ export default {
 
   .header {
     margin-left: 2em;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s ease;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+
+  .workarea {
+    background-color: green;
+    height: 100%;
+    position: 'fixed';
+    top: 0;
+  }
+
+  .avatar-additional {
+    border-radius: 50%;
+    height: 36px;
+    width: 36px;
+    background-color: #dadada;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8em;
   }
 </style>
