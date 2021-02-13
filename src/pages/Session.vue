@@ -13,10 +13,11 @@
             <sui-input transparent placeholder="Retrospective Title" />
           </sui-menu-item>
 
-          <sui-menu-item position="middle">
+          <sui-menu-item>
             <div>
               <sui-button
                 color="teal"
+                @click="createNote('positive')"
                 icon="smile outline"
                 label-position="left"
                 content="Positive Note" />
@@ -24,65 +25,63 @@
                 color="orange"
                 icon="frown outline"
                 label-position="left"
+                @click="createNote('negative')"
                 content="Negative Note" />
               <sui-button
                 color="violet"
                 icon="meh outline"
                 label-position="left"
+                @click="createNote('improvement')"
                 content="Improvement Note" />
               </div>
           </sui-menu-item>
 
           <sui-menu-menu position="right">
-            <sui-menu-item v-if="avatarLinks.length > 0">
-              <sui-image
-                circular
-                size="mini"
-                v-for="(link, index) in avatarLinks"
-                :key="index"
-                :src="link" />
-              <div
-                v-if="restCount > 0"
-                class="avatar-additional">
-                <span>+ {{ restCount }}</span>
-              </div>
+            <sui-menu-item>
+              <avatars :retro-id="retroId" />
             </sui-menu-item>
           </sui-menu-menu>
         </sui-menu>
       </div>
-      <sui-grid
-        :columns="3">
-        <sui-grid-row>
-          <sui-grid-column>
-            <div class="workarea">
-              <note />
-            </div>
-          </sui-grid-column>
-          <sui-grid-column>
-            <div class="workarea">
-              <note />
-            </div>
-          </sui-grid-column>
-          <sui-grid-column>
-            <div class="workarea">
-              <note />
-            </div>
-          </sui-grid-column>
-        </sui-grid-row>
-      </sui-grid>
+      <work-area :retro-id="retroId" />
     </div>
   </transition>
 </template>
 
 <script>
-import client from '../api/client';
-import Note from '../components/Note.vue';
+import client, { retros } from '../api/client';
+import WorkArea from '../components/WorkArea.vue';
+import Avatars from '../components/Avatars.vue';
 
-const MAX_SHOW = 2;
+const getMetaData = (type) => {
+  switch (type) {
+    case 'improvement': {
+      return {
+        text: 'We can do better at...',
+      };
+    }
+    case 'negative': {
+      return {
+        text: 'For me, what did\'t go well is...',
+      };
+    }
+    case 'positive': {
+      return {
+        text: 'For me, what went well is...',
+      };
+    }
+    default: {
+      return {
+        text: '',
+      };
+    }
+  }
+};
 
 export default {
   components: {
-    Note,
+    WorkArea,
+    Avatars,
   },
   data() {
     return {
@@ -93,20 +92,8 @@ export default {
     };
   },
   computed: {
-    avatarLinks() {
-      const numberOfAvatars = (this.usersCount > MAX_SHOW)
-        ? MAX_SHOW
-        : this.usersCount;
-      return Array.from({ length: numberOfAvatars })
-        .map((id) => `https://www.gravatar.com/avatar/${id}?d=retro&s=40`);
-    },
-    usersCount() {
-      return this.retro && this.retro.users ? this.retro.users.length : 0;
-    },
-    restCount() {
-      return this.retro && this.retro.users && this.retro.users.length > MAX_SHOW
-        ? this.retro.users.length - MAX_SHOW
-        : 0;
+    retroId() {
+      return this.retro && this.retro.id;
     },
   },
   methods: {
@@ -122,16 +109,25 @@ export default {
       this.retro = retro;
     },
     async startSession() {
-      console.log('===> we get here');
-      const session = await client.createSession(this.retro.id);
-      this.session = session.id;
+      if (!this.session) {
+        const session = await client.createSession(this.retro.id);
+        this.session = session.id;
+      }
     },
 
     async endSession() {
       if (this.session && this.retro) {
-        console.log('===> this is called');
         await client.closeSession(this.session, this.retro.id);
       }
+    },
+
+    async createNote(type) {
+      const note = {
+        type,
+        ...getMetaData(type),
+      };
+
+      await client.createNote(this.retro.id, note);
     },
   },
   created() {
@@ -146,8 +142,22 @@ export default {
         this.loading = false;
       });
   },
+  mounted() {
+    if (this.retro && this.retro.id) {
+      retros.doc(this.retro.id)
+        .onSnapshot((doc) => {
+          this.retro = {
+            id: doc.id,
+            ...doc.data(),
+          };
+        });
+    }
+  },
   beforeRouteLeave(to, from, next) {
-    this.endSession().then(next);
+    this.endSession().then(() => {
+      window.removeEventListener('beforeunload', this.endSession);
+      next();
+    });
   },
 };
 </script>
@@ -170,23 +180,5 @@ export default {
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
-  }
-
-  .workarea {
-    background-color: green;
-    height: 100%;
-    position: 'fixed';
-    top: 0;
-  }
-
-  .avatar-additional {
-    border-radius: 50%;
-    height: 36px;
-    width: 36px;
-    background-color: #dadada;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.8em;
   }
 </style>

@@ -1,8 +1,8 @@
 import db, { fieldValue } from '../config/firebase';
 import utils from '../../utils';
 
-const retros = db.collection('Retros');
-const sessions = db.collection('Sessions');
+export const retros = db.collection('Retros');
+export const sessions = db.collection('Sessions');
 
 const client = {
   // eslint-disable-next-line consistent-return
@@ -48,8 +48,6 @@ const client = {
 
       const doc = await sessionRef.get();
 
-      console.log('===> doc.id', doc.id, doc.data());
-
       await retros.doc(retroId).update({
         users: fieldValue.arrayUnion(doc.id),
       });
@@ -69,6 +67,21 @@ const client = {
         users: fieldValue.arrayRemove(sessionId),
       });
       await sessions.doc(sessionId).delete();
+    } catch (error) {
+      utils.log(error);
+    }
+  },
+  // eslint-disable-next-line consistent-return
+  async createNote(retroId, note) {
+    try {
+      const noteToAdd = {
+        ...note,
+        id: Math.round(Math.random() * 1000000),
+      };
+
+      await retros.doc(retroId).update({
+        notes: fieldValue.arrayUnion(noteToAdd),
+      });
     } catch (error) {
       utils.log(error);
     }

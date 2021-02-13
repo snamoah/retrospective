@@ -1,14 +1,18 @@
 <template>
   <transition>
     <div class="container">
-      <sui-segment
-        compact
-        inverted
-        raised
-        emphasis="secondary"
+      <sui-card
+        class="raised"
         color="orange">
-          <p>This is a test</p>
-      </sui-segment>
+          <sui-card-content>
+            <sui-card-meta slot="right">
+              <sui-icon name="close" />
+            </sui-card-meta>
+          </sui-card-content>
+          <sui-card-content>
+            <p>This is a test</p>
+          </sui-card-content>
+      </sui-card>
     </div>
   </transition>
 </template>
