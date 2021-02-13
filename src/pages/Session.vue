@@ -127,6 +127,7 @@ export default {
         ...getMetaData(type),
       };
 
+      console.log('===> note to create', note);
       await client.createNote(this.retro.id, note);
     },
   },

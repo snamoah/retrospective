@@ -86,6 +86,16 @@ const client = {
       utils.log(error);
     }
   },
+  // eslint-disable-next-line consistent-return
+  async deleteNote(retroId, note) {
+    try {
+      await retros.doc(retroId).update({
+        notes: fieldValue.arrayRemove(note),
+      });
+    } catch (error) {
+      utils.log(error);
+    }
+  },
 };
 
 export default client;

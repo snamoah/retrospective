@@ -4,17 +4,29 @@
         <sui-grid-row>
           <sui-grid-column>
             <div class="workarea">
-              <note v-for="note in positiveNotes" :key="note.id" />
+              <note
+                v-for="note in positiveNotes"
+                :note="note"
+                :retro-id="retroId"
+                :key="note.id" />
             </div>
           </sui-grid-column>
           <sui-grid-column>
             <div class="workarea">
-              <note v-for="note in negativeNotes" :key="note.id" />
+              <note
+                v-for="note in negativeNotes"
+                :note="note"
+                :retro-id="retroId"
+                :key="note.id" />
             </div>
           </sui-grid-column>
           <sui-grid-column>
             <div class="workarea">
-              <note v-for="note in improvementNotes" :key="note.id" />
+              <note
+                v-for="note in improvementNotes"
+                :note="note"
+                :retro-id="retroId"
+                :key="note.id" />
             </div>
           </sui-grid-column>
         </sui-grid-row>

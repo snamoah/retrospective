@@ -1,16 +1,20 @@
 <template>
   <transition>
-    <div class="container">
+    <div class="container" v-if="note">
       <sui-card
         class="raised"
         color="orange">
           <sui-card-content>
             <sui-card-meta slot="right">
-              <sui-icon name="close" />
+              <sui-icon
+                link
+                name="close"
+                @click.prevent="deleteNote" />
+              <!-- <sui-icon name="close" /> -->
             </sui-card-meta>
           </sui-card-content>
           <sui-card-content>
-            <p>This is a test</p>
+            <p>{{ note.text }}</p>
           </sui-card-content>
       </sui-card>
     </div>
@@ -18,7 +22,15 @@
 </template>
 
 <script>
+import client from '../api/client';
+
 export default {
+  props: ['retroId', 'note'],
+  methods: {
+    async deleteNote() {
+      await client.deleteNote(this.retroId, this.note);
+    },
+  },
   data() {
     return {
       // styles: {
