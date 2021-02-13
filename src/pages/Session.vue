@@ -10,7 +10,10 @@
               size="large" />
           </sui-menu-item>
           <sui-menu-item>
-            <sui-input transparent placeholder="Retrospective Title" />
+            <sui-input 
+              transparent
+              v-model="title"
+              placeholder="Retrospective Title" />
           </sui-menu-item>
 
           <sui-menu-item>
@@ -85,6 +88,7 @@ export default {
   },
   data() {
     return {
+      title: '',
       loading: true,
       retro: null,
       session: null,
