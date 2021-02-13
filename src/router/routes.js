@@ -1,9 +1,15 @@
+import Session from '../pages/Session.vue';
+import NotFound from '../pages/NotFound.vue';
 import LandingPage from '../pages/LandingPage.vue';
-import Board from '../pages/Board.vue';
 
 const routes = [
   { path: '/', component: LandingPage },
-  { path: '/board', component: Board },
+  {
+    name: 'session',
+    path: '/retros/:id',
+    component: Session,
+  },
+  { path: '*', component: NotFound },
 ];
 
 export default routes;
